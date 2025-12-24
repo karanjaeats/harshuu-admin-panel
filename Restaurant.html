@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8">
+  <title>HARSHUU Admin – Restaurants</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+    }
+
+    header {
+      background: #e23744;
+      color: white;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .logout {
+      background: white;
+      color: #e23744;
+    }
+
+    .container {
+      padding: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f1f1f1;
+    }
+
+    .open {
+      color: green;
+      font-weight: bold;
+    }
+
+    .closed {
+      color: red;
+      font-weight: bold;
+    }
+
+    .pending {
+      color: orange;
+      font-weight: bold;
+    }
+
+    .approved {
+      color: green;
+      font-weight: bold;
+    }
+
+    .btn-approve {
+      background: green;
+      color: white;
+    }
+
+    .btn-reject {
+      background: red;
+      color: white;
+    }
+
+    .btn-toggle {
+      background: #e23744;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h2>Restaurants Management</h2>
+  <button class="logout" onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+  <table>
+    <thead>
+      <tr>
+        <th>Restaurant</th>
+        <th>Owner</th>
+        <th>Status</th>
+        <th>Approval</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="restaurantTable"></tbody>
+  </table>
+</div>
+
+<script>
+  const API = "https://harshuu-backend.onrender.com/api/admin";
+  const token = localStorage.getItem("harshuu_admin_token");
+
+  if (!token) {
+    window.location.href = "index.html";
+  }
+
+  async function loadRestaurants() {
+    const res = await fetch(API + "/restaurants", {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+
+    if (res.status === 401) logout();
+
+    const data = await res.json();
+    const table = document.getElementById("restaurantTable");
+    table.innerHTML = "";
+
+    data.forEach(r => {
+      table.innerHTML += `
+        <tr>
+          <td>${r.name}</td>
+          <td>${r.owner}</td>
+          <td class="${r.isOpen ? 'open' : 'closed'}">
+            ${r.isOpen ? 'OPEN' : 'CLOSED'}
+          </td>
+          <td class="${r.isApproved ? 'approved' : 'pending'}">
+            ${r.isApproved ? 'APPROVED' : 'PENDING'}
+          </td>
+          <td>
+            ${
+              !r.isApproved
+                ? `<button class="btn-approve" onclick="approve('${r._id}')">Approve</button>`
+                : `<button class="btn-toggle" onclick="toggle('${r._id}', ${!r.isOpen})">
+                     ${r.isOpen ? 'Close' : 'Open'}
+                   </button>`
+            }
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  async function approve(id) {
+    await fetch(API + "/restaurants/" + id + "/approve", {
+      method: "PATCH",
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+    loadRestaurants();
+  }
+
+  async function toggle(id, status) {
+    await fetch(API + "/restaurants/" + id + "/status", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({ isOpen: status })
+    });
+    loadRestaurants();
+  }
+
+  function logout() {
+    localStorage.removeItem("harshuu_admin_token");
+    window.location.href = "index.html";
+  }
+
+  loadRestaurants();
+</script>
+
+</body>
+</html>
