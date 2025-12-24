@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8">
+  <title>HARSHUU Admin – Riders</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    header {
+      background: #e23744;
+      color: white;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .logout {
+      background: white;
+      color: #e23744;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 10px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .status {
+      font-weight: bold;
+    }
+
+    .online { color: green; }
+    .offline { color: gray; }
+
+    button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-right: 6px;
+    }
+
+    .approve {
+      background: #28a745;
+      color: white;
+    }
+
+    .suspend {
+      background: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h2>Delivery Riders</h2>
+  <button class="logout" onclick="logout()">Logout</button>
+</header>
+
+<div class="container" id="riderList"></div>
+
+<script>
+  const API = "https://harshuu-backend.onrender.com/api/admin";
+  const token = localStorage.getItem("harshuu_admin_token");
+
+  if (!token) {
+    window.location.href = "index.html";
+  }
+
+  async function loadRiders() {
+    const res = await fetch(API + "/riders", {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+
+    if (res.status === 401) logout();
+
+    const riders = await res.json();
+    const list = document.getElementById("riderList");
+    list.innerHTML = "";
+
+    riders.forEach(r => {
+      list.innerHTML += `
+        <div class="card">
+          <div class="row"><b>${r.name}</b> (${r.phone})</div>
+          <div class="row">
+            Status:
+            <span class="status ${r.isOnline ? "online" : "offline"}">
+              ${r.isOnline ? "Online" : "Offline"}
+            </span>
+          </div>
+          <div class="row">Orders: ${r.totalOrders}</div>
+          <div class="row">Earnings: ₹${r.totalEarnings}</div>
+          <div class="row">
+            ${
+              r.isApproved
+              ? `<button class="suspend" onclick="suspendRider('${r._id}')">Suspend</button>`
+              : `<button class="approve" onclick="approveRider('${r._id}')">Approve</button>`
+            }
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  async function approveRider(id) {
+    await fetch(API + "/riders/" + id + "/approve", {
+      method: "PATCH",
+      headers: {
+        "Authorization": "Bearer " + token"
+      }
+    });
+    loadRiders();
+  }
+
+  async function suspendRider(id) {
+    await fetch(API + "/riders/" + id + "/suspend", {
+      method: "PATCH",
+      headers: {
+        "Authorization": "Bearer " + token"
+      }
+    });
+    loadRiders();
+  }
+
+  function logout() {
+    localStorage.removeItem("harshuu_admin_token");
+    window.location.href = "index.html";
+  }
+
+  loadRiders();
+</script>
+
+</body>
+</html>
