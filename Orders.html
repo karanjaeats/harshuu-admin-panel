@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8">
+  <title>HARSHUU Admin – Orders</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    header {
+      background: #e23744;
+      color: white;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .logout {
+      background: white;
+      color: #e23744;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #f1f1f1;
+    }
+
+    select {
+      padding: 4px;
+      font-size: 12px;
+    }
+
+    .amount {
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h2>Orders Management</h2>
+  <button class="logout" onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+  <table>
+    <thead>
+      <tr>
+        <th>Order</th>
+        <th>User</th>
+        <th>Restaurant</th>
+        <th>Delivery</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Change</th>
+      </tr>
+    </thead>
+    <tbody id="orderTable"></tbody>
+  </table>
+</div>
+
+<script>
+  const API = "https://harshuu-backend.onrender.com/api/admin";
+  const token = localStorage.getItem("harshuu_admin_token");
+
+  if (!token) {
+    window.location.href = "index.html";
+  }
+
+  async function loadOrders() {
+    const res = await fetch(API + "/orders", {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+
+    if (res.status === 401) logout();
+
+    const orders = await res.json();
+    const table = document.getElementById("orderTable");
+    table.innerHTML = "";
+
+    orders.forEach(o => {
+      table.innerHTML += `
+        <tr>
+          <td>${o.orderNumber}</td>
+          <td>${o.user?.name || "-"}</td>
+          <td>${o.restaurant?.name || "-"}</td>
+          <td>${o.deliveryPartner?.name || "Unassigned"}</td>
+          <td class="amount">₹${o.totalAmount}</td>
+          <td>${o.status}</td>
+          <td>
+            <select onchange="updateStatus('${o._id}', this.value)">
+              ${statusOptions(o.status)}
+            </select>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function statusOptions(current) {
+    const statuses = [
+      "CREATED",
+      "ACCEPTED",
+      "PREPARING",
+      "PICKED",
+      "DELIVERED",
+      "CANCELLED"
+    ];
+
+    return statuses.map(s =>
+      `<option value="${s}" ${s === current ? "selected" : ""}>${s}</option>`
+    ).join("");
+  }
+
+  async function updateStatus(orderId, status) {
+    await fetch(API + "/orders/" + orderId + "/status", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({ status })
+    });
+    loadOrders();
+  }
+
+  function logout() {
+    localStorage.removeItem("harshuu_admin_token");
+    window.location.href = "index.html";
+  }
+
+  loadOrders();
+</script>
+
+</body>
+</html>
