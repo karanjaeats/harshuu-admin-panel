@@ -40,11 +40,11 @@ async function adminLogin(event) {
       return;
     }
 
-    // ✅ TOKEN SAVE (IMPORTANT FIX)
+    // ✅ SAVE TOKEN
     localStorage.setItem("harshuu_admin_token", data.accessToken);
     localStorage.setItem("harshuu_admin_email", data.admin.email);
 
-    // ✅ Redirect to dashboard
+    // ✅ REDIRECT
     window.location.href = "dashboard.html";
 
   } catch (err) {
@@ -85,8 +85,10 @@ function adminLogout() {
 function getAuthHeader() {
   const token = localStorage.getItem("harshuu_admin_token");
 
+  if (!token) return {};
+
   return {
     "Authorization": "Bearer " + token,
     "Content-Type": "application/json"
   };
-    }
+}
