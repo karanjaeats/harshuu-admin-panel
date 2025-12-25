@@ -6,7 +6,9 @@
 const API_BASE = "https://harshuu-backend.onrender.com";
 
 /**
- * Admin Login
+ * =========================
+ * ADMIN LOGIN
+ * =========================
  */
 async function adminLogin(event) {
   event.preventDefault();
@@ -23,7 +25,7 @@ async function adminLogin(event) {
   }
 
   try {
-    const res = await fetch(API_BASE + "/api/auth/admin/login", {
+    const res = await fetch(API_BASE + "/api/admin/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -38,9 +40,9 @@ async function adminLogin(event) {
       return;
     }
 
-    // ✅ Save token
-    localStorage.setItem("harshuu_admin_token", data.token);
-    localStorage.setItem("harshuu_admin_name", data.admin.name);
+    // ✅ TOKEN SAVE (IMPORTANT FIX)
+    localStorage.setItem("harshuu_admin_token", data.accessToken);
+    localStorage.setItem("harshuu_admin_email", data.admin.email);
 
     // ✅ Redirect to dashboard
     window.location.href = "dashboard.html";
@@ -52,31 +54,39 @@ async function adminLogin(event) {
 }
 
 /**
- * Check Admin Authentication (for protected pages)
+ * =========================
+ * CHECK AUTH (Protected Pages)
+ * =========================
  */
 function checkAdminAuth() {
   const token = localStorage.getItem("harshuu_admin_token");
+
   if (!token) {
     window.location.href = "index.html";
   }
 }
 
 /**
- * Logout Admin
+ * =========================
+ * LOGOUT
+ * =========================
  */
 function adminLogout() {
   localStorage.removeItem("harshuu_admin_token");
-  localStorage.removeItem("harshuu_admin_name");
+  localStorage.removeItem("harshuu_admin_email");
   window.location.href = "index.html";
 }
 
 /**
- * Get Auth Header
+ * =========================
+ * AUTH HEADER (API CALLS)
+ * =========================
  */
 function getAuthHeader() {
   const token = localStorage.getItem("harshuu_admin_token");
+
   return {
     "Authorization": "Bearer " + token,
     "Content-Type": "application/json"
   };
-}
+    }
