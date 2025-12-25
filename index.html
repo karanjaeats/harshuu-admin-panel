@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="mr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>HARSHUU Admin Login</title>
@@ -65,10 +65,15 @@
     <h2>HARSHUU Admin</h2>
 
     <input
-      type="tel"
-      id="mobile"
-      placeholder="Admin mobile number"
-      maxlength="10"
+      type="email"
+      id="email"
+      placeholder="Admin email"
+    />
+
+    <input
+      type="password"
+      id="password"
+      placeholder="Password"
     />
 
     <button id="loginBtn" onclick="adminLogin()">Login</button>
@@ -78,14 +83,15 @@
 
   <script>
     async function adminLogin() {
-      const mobile = document.getElementById("mobile").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
       const errorBox = document.getElementById("error");
       const btn = document.getElementById("loginBtn");
 
       errorBox.innerText = "";
 
-      if (!mobile || mobile.length !== 10) {
-        errorBox.innerText = "योग्य mobile number टाका";
+      if (!email || !password) {
+        errorBox.innerText = "Email आणि Password आवश्यक आहे";
         return;
       }
 
@@ -100,24 +106,24 @@
             headers: {
               "Content-Type": "application/json"
             },
-            body: JSON.stringify({ mobile })
+            body: JSON.stringify({ email, password })
           }
         );
 
         const data = await response.json();
 
-        if (!data.success || !data.token) {
-          throw new Error("Login failed");
+        if (!data.success || !data.accessToken) {
+          throw new Error(data.message || "Login failed");
         }
 
         // JWT token save
-        localStorage.setItem("harshuu_admin_token", data.token);
+        localStorage.setItem("harshuu_admin_token", data.accessToken);
 
         // Dashboard ला redirect
         window.location.href = "dashboard.html";
 
       } catch (err) {
-        errorBox.innerText = "Admin login failed";
+        errorBox.innerText = err.message || "Admin login failed";
       } finally {
         btn.disabled = false;
         btn.innerText = "Login";
