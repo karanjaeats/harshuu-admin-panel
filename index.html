@@ -111,6 +111,9 @@
         );
 
         const data = await response.json();
+        console.log("🔎 Full login response:", data);
+console.log("🔑 tokens object:", data.tokens);
+console.log("🔐 accessToken:", data?.tokens?.accessToken);
 
         if (!data.success || !data.accessToken) {
           throw new Error(data.message || "Login failed html");
