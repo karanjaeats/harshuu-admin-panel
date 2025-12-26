@@ -113,7 +113,7 @@
         const data = await response.json();
 
         if (!data.success || !data.accessToken) {
-          throw new Error(data.message || "Login failed");
+          throw new Error(data.message || "Login failed html");
         }
 
         // JWT token save
